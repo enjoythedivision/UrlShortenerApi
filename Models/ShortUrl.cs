@@ -1,5 +1,8 @@
-﻿namespace UrlShortenerApi.Models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace UrlShortenerApi.Models
 {
+    [Index(nameof(ShortCode), IsUnique = true)]
     public class ShortUrl
     {
         public int Id { get; set; }

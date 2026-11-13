@@ -11,5 +11,6 @@ namespace UrlShortenerApi.Data
         }
 
         public DbSet<ShortUrl> ShortUrls { get; set; }
+
     }
 }
