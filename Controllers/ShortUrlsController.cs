@@ -55,5 +55,19 @@ namespace UrlShortenerApi.Controllers
             await _context.SaveChangesAsync();
             return StatusCode(StatusCodes.Status201Created, shortUrl);
         }
+
+        [HttpGet("/{shortCode}")]
+        public async Task<IActionResult> Resolve(string shortCode)
+        {
+            var existingUrl = await _context.ShortUrls.FirstOrDefaultAsync(x => x.ShortCode == shortCode);
+
+            if (existingUrl is null)
+            {
+                return NotFound();
+            }
+
+            return Redirect(existingUrl.OriginalUrl);
+
+        }
     }
 }
