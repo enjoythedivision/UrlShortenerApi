@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using UrlShortenerApi.Data;
 using UrlShortenerApi.DTOs;
 using UrlShortenerApi.Models;
@@ -35,6 +36,13 @@ namespace UrlShortenerApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Shorten(ShortenUrlRequest request)
         {
+            var existingUrl = await _context.ShortUrls.FirstOrDefaultAsync(x => x.OriginalUrl == request.OriginalUrl);
+            
+            if (existingUrl is not null)
+            {
+                return Ok(existingUrl);
+            }
+
             string originalUrl = request.OriginalUrl;
             string shortCode = GenerateShortCode();
 
