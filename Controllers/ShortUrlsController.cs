@@ -59,8 +59,9 @@ namespace UrlShortenerApi.Controllers
         [HttpGet("/{shortCode}")]
         public async Task<IActionResult> Resolve(string shortCode)
         {
-            var existingUrl = await _context.ShortUrls.FirstOrDefaultAsync(x => x.ShortCode == shortCode);
-
+            var existingUrl = await _context.ShortUrls
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync(x => x.ShortCode == shortCode);
             if (existingUrl is null)
             {
                 return NotFound();
