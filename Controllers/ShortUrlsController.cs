@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using UrlShortenerApi.Data;
 using UrlShortenerApi.DTOs;
+using UrlShortenerApi.Models;
 
 namespace UrlShortenerApi.Controllers
 {
@@ -8,6 +10,13 @@ namespace UrlShortenerApi.Controllers
     [ApiController]
     public class ShortUrlsController : ControllerBase
     {
+        private readonly AppDbContext _context;
+
+        public ShortUrlsController(AppDbContext context)
+        {
+            _context = context;
+        }
+
         private static string GenerateShortCode()
         {
             string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -24,9 +33,19 @@ namespace UrlShortenerApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult Shorten(ShortenUrlRequest url)
+        public async Task<IActionResult> Shorten(ShortenUrlRequest request)
         {
-            return Ok(url.OriginalUrl);
+            string originalUrl = request.OriginalUrl;
+            string shortCode = GenerateShortCode();
+
+            var shortUrl = new ShortUrl{
+                OriginalUrl = originalUrl,
+                ShortCode = shortCode
+            };
+
+            _context.ShortUrls.Add(shortUrl);
+            await _context.SaveChangesAsync();
+            return StatusCode(StatusCodes.Status201Created, shortUrl);
         }
     }
 }
