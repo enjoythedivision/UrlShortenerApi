@@ -46,6 +46,11 @@ namespace UrlShortenerApi.Controllers
             string originalUrl = request.OriginalUrl;
             string shortCode = GenerateShortCode();
 
+            while (await _context.ShortUrls.AnyAsync(x => x.ShortCode == shortCode))
+            {
+                shortCode = GenerateShortCode();
+            }
+
             var shortUrl = new ShortUrl{
                 OriginalUrl = originalUrl,
                 ShortCode = shortCode
