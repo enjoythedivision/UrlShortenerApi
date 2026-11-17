@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using UrlShortenerApi.Models;
 
 namespace UrlShortenerApi.Data
@@ -10,7 +10,7 @@ namespace UrlShortenerApi.Data
 
         }
 
-        public DbSet<ShortUrl> ShortUrls { get; set; }
+        public DbSet<UrlMapping> UrlMappings { get; set; }
 
     }
 }

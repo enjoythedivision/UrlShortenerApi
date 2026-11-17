@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace UrlShortenerApi.DTOs
 {
-    public class ShortenUrlRequest
+    public class ShortenRequest
     {
         [Required]
         [Url]

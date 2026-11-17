@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UrlShortenerApi.Data;
@@ -18,62 +18,65 @@ namespace UrlShortenerApi.Controllers
             _context = context;
         }
 
-        private static string GenerateShortCode()
+        private static string GenerateCode()
         {
-            string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-            char randomChar;
-            string shortUrl = "";
-        
+            const string characters =
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+
+            string code = "";
+
             for (int i = 0; i < 6; i++)
             {
-                int randomIndex = new Random().Next(0, 62);
-                randomChar = characters[randomIndex];
-                shortUrl += randomChar;
+                int index = Random.Shared.Next(characters.Length);
+                code += characters[index];
             }
-            return shortUrl;
+
+            return code;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Shorten(ShortenUrlRequest request)
+        public async Task<IActionResult> Shorten(ShortenRequest request)
         {
-            var existingUrl = await _context.ShortUrls.FirstOrDefaultAsync(x => x.OriginalUrl == request.OriginalUrl);
-            
+            var existingUrl = await _context.UrlMappings
+                .FirstOrDefaultAsync(x => x.OriginalUrl == request.OriginalUrl);
+
             if (existingUrl is not null)
             {
                 return Ok(existingUrl);
             }
 
             string originalUrl = request.OriginalUrl;
-            string shortCode = GenerateShortCode();
+            string code = GenerateCode();
 
-            while (await _context.ShortUrls.AnyAsync(x => x.ShortCode == shortCode))
+            while (await _context.UrlMappings.AnyAsync(x => x.Code == code))
             {
-                shortCode = GenerateShortCode();
+                code = GenerateCode();
             }
 
-            var shortUrl = new ShortUrl{
+            var mapping = new UrlMapping
+            {
                 OriginalUrl = originalUrl,
-                ShortCode = shortCode
+                Code = code
             };
 
-            _context.ShortUrls.Add(shortUrl);
+            _context.UrlMappings.Add(mapping);
             await _context.SaveChangesAsync();
-            return StatusCode(StatusCodes.Status201Created, shortUrl);
+            return StatusCode(StatusCodes.Status201Created, mapping);
         }
 
-        [HttpGet("/{shortCode}")]
-        public async Task<IActionResult> Resolve(string shortCode)
+        [HttpGet("/{code}")]
+        public async Task<IActionResult> Resolve(string code)
         {
-            var existingUrl = await _context.ShortUrls
-                                            .AsNoTracking()
-                                            .FirstOrDefaultAsync(x => x.ShortCode == shortCode);
+            var existingUrl = await _context.UrlMappings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Code == code);
+
             if (existingUrl is null)
             {
                 return NotFound();
             }
 
             return Redirect(existingUrl.OriginalUrl);
-
         }
     }
 }
