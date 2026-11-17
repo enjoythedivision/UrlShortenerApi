@@ -6,6 +6,7 @@ namespace UrlShortenerApi.DTOs
     {
         [Required]
         [Url]
+        [StringLength(2048)]
         public string OriginalUrl { get; set; } = string.Empty;
     }
 }

@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -34,18 +35,28 @@ namespace UrlShortenerApi.Controllers
             return code;
         }
 
+        private ShortenResponse CreateResponse(UrlMapping mapping)
+        {
+            var response = new ShortenResponse
+                {
+                    OriginalUrl = mapping.OriginalUrl,
+                    ShortUrl = Request.Scheme + "://" + Request.Host + "/" + mapping.Code
+                };
+
+            return response;
+        }
+
         [HttpPost]
         public async Task<IActionResult> Shorten(ShortenRequest request)
         {
-            var existingUrl = await _context.UrlMappings
+            var mapping = await _context.UrlMappings
                 .FirstOrDefaultAsync(x => x.OriginalUrl == request.OriginalUrl);
 
-            if (existingUrl is not null)
+            if (mapping is not null)
             {
-                return Ok(existingUrl);
+                return Ok(CreateResponse(mapping));
             }
 
-            string originalUrl = request.OriginalUrl;
             string code = GenerateCode();
 
             while (await _context.UrlMappings.AnyAsync(x => x.Code == code))
@@ -53,15 +64,21 @@ namespace UrlShortenerApi.Controllers
                 code = GenerateCode();
             }
 
-            var mapping = new UrlMapping
+            mapping = new UrlMapping
             {
-                OriginalUrl = originalUrl,
+                OriginalUrl = request.OriginalUrl,
                 Code = code
             };
 
             _context.UrlMappings.Add(mapping);
             await _context.SaveChangesAsync();
-            return StatusCode(StatusCodes.Status201Created, mapping);
+
+            var response = CreateResponse(mapping);
+
+            return CreatedAtAction(
+                nameof(Resolve),
+                new { code = mapping.Code },
+                response);
         }
 
         [HttpGet("/{code}")]
