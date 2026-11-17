@@ -9,11 +9,11 @@ namespace UrlShortenerApi.Controllers
 {
     [Route("shorten")]
     [ApiController]
-    public class ShortUrlsController : ControllerBase
+    public class UrlMappingsController : ControllerBase
     {
         private readonly AppDbContext _context;
 
-        public ShortUrlsController(AppDbContext context)
+        public UrlMappingsController(AppDbContext context)
         {
             _context = context;
         }
