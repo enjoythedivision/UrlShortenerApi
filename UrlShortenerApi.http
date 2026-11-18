@@ -1,6 +1,10 @@
 @UrlShortenerApi_HostAddress = http://localhost:5161
 
-GET {{UrlShortenerApi_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{UrlShortenerApi_HostAddress}}/shorten/
+Content-Type: application/json
 
+{
+    "OriginalUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+}
 ###
+GET {{UrlShortenerApi_HostAddress}}/abc123
