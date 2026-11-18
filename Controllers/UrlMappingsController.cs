@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using UrlShortenerApi.Data;
 using UrlShortenerApi.DTOs;
 using UrlShortenerApi.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.Identity.Client.NativeInterop;
 
 namespace UrlShortenerApi.Controllers
 {
@@ -38,10 +40,10 @@ namespace UrlShortenerApi.Controllers
         private ShortenResponse CreateResponse(UrlMapping mapping)
         {
             var response = new ShortenResponse
-                {
-                    OriginalUrl = mapping.OriginalUrl,
-                    ShortUrl = Request.Scheme + "://" + Request.Host + "/" + mapping.Code
-                };
+            {
+                OriginalUrl = mapping.OriginalUrl,
+                ShortUrl = Request.Scheme + "://" + Request.Host + "/" + mapping.Code
+            };
 
             return response;
         }
@@ -71,7 +73,35 @@ namespace UrlShortenerApi.Controllers
             };
 
             _context.UrlMappings.Add(mapping);
-            await _context.SaveChangesAsync();
+
+            const int maxAttempts = 3;
+
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    break;
+                }
+                catch (DbUpdateException ex)
+                {
+                    if (ex.InnerException is SqlException sqlError)
+                    {
+                        if (sqlError.Number == 2601)
+                        {
+                            Console.WriteLine("Couldn't create shortcode.");
+
+                            if (attempt < maxAttempts)
+                            {
+                                mapping.Code = GenerateCode();
+                                continue;
+                            }
+                        }
+                    }
+
+                    throw;
+                }
+            }
 
             var response = CreateResponse(mapping);
 
